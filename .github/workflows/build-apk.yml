@@ -14,9 +14,206 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - run: mkdir -p www && cp index.html www/index.html
+      - name: Prepare web files
+        run: |
+          mkdir -p www
+          if [ -f index.html ]; then cp index.html www/index.html; fi
+          test -f www/index.html
       - run: npm install
       - run: npx cap add android
+      - name: Add music library plugin
+        run: |
+          D=android/app/src/main/java/com/tapedeck/player
+          mkdir -p $D
+          cat > $D/TapeLibPlugin.java <<'EOF'
+          package com.tapedeck.player;
+
+          import android.Manifest;
+          import android.content.ContentResolver;
+          import android.content.ContentUris;
+          import android.content.res.AssetFileDescriptor;
+          import android.database.Cursor;
+          import android.graphics.Bitmap;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.provider.MediaStore;
+          import android.util.Base64;
+          import android.util.Size;
+
+          import com.getcapacitor.JSArray;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.PermissionState;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import com.getcapacitor.annotation.Permission;
+          import com.getcapacitor.annotation.PermissionCallback;
+
+          import java.io.ByteArrayOutputStream;
+          import java.io.FileInputStream;
+          import java.nio.ByteBuffer;
+          import java.nio.channels.FileChannel;
+
+          @CapacitorPlugin(
+              name = "TapeLib",
+              permissions = {
+                  @Permission(alias = "audio33", strings = { Manifest.permission.READ_MEDIA_AUDIO }),
+                  @Permission(alias = "audioOld", strings = { Manifest.permission.READ_EXTERNAL_STORAGE })
+              }
+          )
+          public class TapeLibPlugin extends Plugin {
+
+              private String alias() {
+                  return Build.VERSION.SDK_INT >= 33 ? "audio33" : "audioOld";
+              }
+
+              private boolean granted() {
+                  return getPermissionState(alias()) == PermissionState.GRANTED;
+              }
+
+              @PluginMethod
+              public void scan(PluginCall call) {
+                  if (!granted()) {
+                      requestPermissionForAlias(alias(), call, "afterPermission");
+                      return;
+                  }
+                  doScan(call);
+              }
+
+              @PermissionCallback
+              private void afterPermission(PluginCall call) {
+                  if (granted()) {
+                      doScan(call);
+                  } else {
+                      call.reject("denied");
+                  }
+              }
+
+              private void doScan(PluginCall call) {
+                  Cursor c = null;
+                  try {
+                      Uri coll = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                      String[] proj = {
+                          MediaStore.Audio.Media._ID,
+                          MediaStore.Audio.Media.TITLE,
+                          MediaStore.Audio.Media.ARTIST,
+                          MediaStore.Audio.Media.ALBUM,
+                          MediaStore.Audio.Media.DURATION,
+                          MediaStore.Audio.Media.SIZE,
+                          MediaStore.Audio.Media.DISPLAY_NAME,
+                          MediaStore.Audio.Media.DATE_ADDED,
+                          MediaStore.Audio.Media.MIME_TYPE
+                      };
+                      String sel = MediaStore.Audio.Media.IS_RINGTONE + "=0 AND "
+                          + MediaStore.Audio.Media.IS_NOTIFICATION + "=0 AND "
+                          + MediaStore.Audio.Media.IS_ALARM + "=0 AND "
+                          + MediaStore.Audio.Media.DURATION + ">=15000";
+                      c = getContext().getContentResolver().query(coll, proj, sel, null, null);
+                      JSArray arr = new JSArray();
+                      if (c != null) {
+                          while (c.moveToNext()) {
+                              long id = c.getLong(0);
+                              JSObject o = new JSObject();
+                              o.put("id", id);
+                              o.put("uri", ContentUris.withAppendedId(coll, id).toString());
+                              o.put("title", c.getString(1));
+                              o.put("artist", c.getString(2));
+                              o.put("album", c.getString(3));
+                              o.put("dur", c.getLong(4));
+                              o.put("size", c.getLong(5));
+                              o.put("file", c.getString(6));
+                              o.put("added", c.getLong(7));
+                              o.put("mime", c.getString(8));
+                              arr.put(o);
+                          }
+                      }
+                      JSObject res = new JSObject();
+                      res.put("tracks", arr);
+                      call.resolve(res);
+                  } catch (Exception e) {
+                      call.reject("scan failed: " + e.getMessage());
+                  } finally {
+                      if (c != null) {
+                          c.close();
+                      }
+                  }
+              }
+
+              @PluginMethod
+              public void read(PluginCall call) {
+                  try {
+                      Uri uri = Uri.parse(call.getString("uri"));
+                      int off = call.getInt("offset", 0);
+                      int len = call.getInt("length", 2097152);
+                      ContentResolver cr = getContext().getContentResolver();
+                      AssetFileDescriptor afd = cr.openAssetFileDescriptor(uri, "r");
+                      if (afd == null) {
+                          call.reject("cannot open file");
+                          return;
+                      }
+                      try {
+                          FileInputStream fis = afd.createInputStream();
+                          FileChannel ch = fis.getChannel();
+                          long start = afd.getStartOffset();
+                          long total = afd.getLength() >= 0 ? afd.getLength() : ch.size() - start;
+                          ByteBuffer bb = ByteBuffer.allocate(len);
+                          ch.position(start + off);
+                          while (bb.hasRemaining()) {
+                              if (ch.read(bb) < 0) {
+                                  break;
+                              }
+                          }
+                          bb.flip();
+                          JSObject r = new JSObject();
+                          r.put("data", Base64.encodeToString(bb.array(), 0, bb.limit(), Base64.NO_WRAP));
+                          r.put("size", total);
+                          r.put("eof", off + bb.limit() >= total);
+                          call.resolve(r);
+                      } finally {
+                          afd.close();
+                      }
+                  } catch (Exception e) {
+                      call.reject("read failed: " + e.getMessage());
+                  }
+              }
+
+              @PluginMethod
+              public void art(PluginCall call) {
+                  JSObject r = new JSObject();
+                  if (Build.VERSION.SDK_INT >= 29) {
+                      try {
+                          Uri uri = Uri.parse(call.getString("uri"));
+                          Bitmap bm = getContext().getContentResolver().loadThumbnail(uri, new Size(256, 256), null);
+                          ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                          bm.compress(Bitmap.CompressFormat.JPEG, 82, bos);
+                          r.put("data", Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP));
+                      } catch (Exception e) {
+                          // no artwork for this song
+                      }
+                  }
+                  call.resolve(r);
+              }
+          }
+          EOF
+          cat > $D/MainActivity.java <<'EOF'
+          package com.tapedeck.player;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(TapeLibPlugin.class);
+                  super.onCreate(savedInstanceState);
+              }
+          }
+          EOF
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's@<application@<uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n    <application@' $M
+          grep -q READ_MEDIA_AUDIO $M
+          grep -q 'registerPlugin(TapeLibPlugin' $D/MainActivity.java
       - run: npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
