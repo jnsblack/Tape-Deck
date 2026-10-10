@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131514">
+<title>Tape Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--desk:#c2c6c2;--ink:#1d1f1f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--desk:#131514;--ink:#e6e6e0}}
+:root[data-theme="dark"]{--desk:#131514;--ink:#e6e6e0}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+body{margin:0;background:var(--desk);color:var(--ink);font-family:"Share Tech Mono","Courier New",monospace;display:flex;justify-content:center;padding:14px;min-height:100vh}
+.deck{--frame:#5b3d28;--p1:#585d5f;--p2:#383c3d;--k1:#d6d9d7;--k2:#9a9e9d;--ks:#44484a;--kc:#222;--ac:#d9822b;--fg:#e8e4d6;--lcd:#f0ecdc;--lcdbg:#0d0e0e;
+width:100%;max-width:440px;align-self:flex-start;border:10px solid var(--frame);border-radius:18px;padding:12px;color:var(--fg);
+box-shadow:0 18px 34px #0006,inset 0 0 0 2px #0003;background:repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 3px),linear-gradient(var(--p1),var(--p2));transition:border-color .4s}
+.deck[data-th=cd]{--frame:#8f969c;--p1:#30353a;--p2:#16191c;--k1:#e6e9ec;--k2:#a9b0b6;--ks:#555b61;--kc:#1b1d1f;--ac:#3fb6ff;--fg:#dfe6ec;--lcd:#7fd3ff;--lcdbg:#051017}
+.deck[data-th=lp]{--frame:#3a2616;--p1:#80593a;--p2:#5c3c26;--k1:#f0e4c6;--k2:#c8b78e;--ks:#6a5636;--kc:#3a2a18;--ac:#e0a030;--fg:#f5ead0;--lcd:#ffc46b;--lcdbg:#1a1008}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;padding:9px 4px;border:0;border-radius:8px;background:#0003;color:var(--fg);font-size:14px}
+.tabs button.on{background:var(--ac);color:#111}
+.win{background:#0d0e0e;border:2px solid #0006;border-radius:10px;padding:6px}
+svg{display:block;width:100%;height:auto}
+.hw{font-family:"Special Elite","Courier New",monospace}
+#mC,#mD{transform-origin:180px 115px}#mV{transform-origin:130px 115px}
+#mC.out{animation:cOut .44s ease-in forwards}#mC.in{animation:cIn .52s cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes cOut{to{transform:translateY(150px) rotate(5deg);opacity:0}}
+@keyframes cIn{from{transform:translateY(-140px) scale(.92);opacity:0}}
+#mD.out{animation:dOut .44s ease-in forwards}#mD.in{animation:dIn .52s ease-out both}
+@keyframes dOut{to{transform:translateX(170px) scale(.85);opacity:0}}
+@keyframes dIn{from{transform:translateX(-170px) scale(.85);opacity:0}}
+#mV.out{animation:vOut .44s ease-in forwards}#mV.in{animation:vIn .55s ease-out both}
+@keyframes vOut{to{transform:translate(-60px,-50px) scale(1.12) rotate(-10deg);opacity:0}}
+@keyframes vIn{from{transform:translate(0,-30px) scale(1.25);opacity:0}}
+.np{display:flex;flex-direction:column;align-items:center;margin:10px 0 0;min-height:42px;text-align:center}
+.np b{font-size:17px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.np small{font-size:13px;opacity:.75}
+.meters{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin:10px 0;align-items:center}
+.vu{position:relative;height:60px;border-radius:6px;overflow:hidden;border:3px solid #0008;background:radial-gradient(circle at 50% 125%,#f3e6b4 0,#d8c685 75%);box-shadow:inset 0 0 12px #0006}
+.vu i{position:absolute;left:50%;bottom:-6px;width:2px;height:52px;background:#b1281d;transform-origin:50% 100%;transform:rotate(-50deg)}
+.vu b{position:absolute;left:7px;top:3px;font-size:12px;color:#3a2f12}
+.vu::after{content:"";position:absolute;right:9px;top:11px;width:22px;height:4px;background:#b1281d;border-radius:2px;transform:rotate(38deg)}
+.counter{background:var(--lcdbg);color:var(--lcd);font-size:26px;padding:8px 12px;border-radius:4px;border:2px solid #0008;letter-spacing:2px;text-shadow:0 0 7px var(--lcd)}
+#seek{width:100%;margin:2px 0 12px;accent-color:var(--ac)}
+.keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding-bottom:5px}
+.keys button{height:54px;border:0;border-radius:4px 4px 6px 6px;background:linear-gradient(var(--k1),var(--k2));color:var(--kc);font-size:15px;box-shadow:0 5px 0 var(--ks),0 7px 8px #0007;transition:transform .06s,box-shadow .06s;-webkit-user-select:none;user-select:none}
+.keys button.on,.keys button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ks);filter:brightness(.88)}
+.chips{display:flex;gap:6px;margin:10px 0}
+.chips button{flex:1;padding:8px 4px;border:0;border-radius:99px;background:#0003;color:var(--fg);font-size:13px}
+.chips button.on{background:var(--ac);color:#111}
+.vol{display:flex;gap:10px;align-items:center;margin:6px 2px 10px;font-size:14px}
+.vol input{flex:1;accent-color:var(--ac)}
+.hint{font-size:13px;line-height:1.45;margin:6px 2px 10px;opacity:.85}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+li{display:flex;gap:6px}
+.row{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:var(--k1);color:var(--kc);border:0;border-left:6px solid var(--k2);border-radius:4px;padding:6px 10px 6px 6px;text-align:left}
+.row.cur{border-left-color:var(--ac);filter:brightness(1.06)}
+.row img{width:40px;height:40px;border-radius:3px;object-fit:cover;flex:none}
+.row span{display:flex;flex-direction:column;min-width:0}
+.row b{font-weight:400;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row small{font-size:12px;opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.x{width:44px;border:0;border-radius:4px;background:#0003;color:var(--fg);font-size:15px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:#000d;color:#fff;padding:10px 16px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.25s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style></head><body>
+<main class="deck" data-th="cas">
+<div class="tabs"><button data-t="cas">Cassette</button><button data-t="cd">CD</button><button data-t="lp">Vinyl</button></div>
+<div class="win">
+
+<svg id="sv-cas" viewBox="0 0 360 230" role="img" aria-label="Cassette tape">
+<defs>
+<g id="hub"><circle r="14" fill="#e8e4d6"/><path d="M0-10V10M-8.7-5L8.7 5M-8.7 5L8.7-5" stroke="#2a2724" stroke-width="3.5"/><circle r="4.5" fill="#111"/><circle cy="-11" r="2.2" fill="#d9822b"/></g>
+<clipPath id="cpS"><path d="M22 20a6 6 0 0 1 6-6h304a6 6 0 0 1 6 6v28H22z"/></clipPath>
+<linearGradient id="gS" x1="0" x2="1"><stop offset="0" stop-color="#0c1218" stop-opacity=".85"/><stop offset=".6" stop-color="#0c1218" stop-opacity="0"/></linearGradient>
+</defs>
+<g id="mC">
+<rect x="4" y="4" width="352" height="222" rx="14" fill="#2b2622" stroke="#0a0908" stroke-width="2"/>
+<rect x="22" y="14" width="316" height="90" rx="6" fill="#e6dcc3"/>
+<image id="aC" x="22" y="14" width="316" height="34" preserveAspectRatio="xMidYMid slice" clip-path="url(#cpS)"/>
+<path d="M22 20a6 6 0 0 1 6-6h304a6 6 0 0 1 6 6v28H22z" fill="url(#gS)"/>
+<text class="hw" x="34" y="36" font-size="12" fill="#fff">Hi-Fi Tape</text>
+<text class="hw" x="326" y="36" font-size="12" fill="#fff" text-anchor="end">C60</text>
+<rect x="22" y="48" width="316" height="3" fill="#d9822b"/>
+<path d="M34 80H326M34 100H326" stroke="#b9ad90"/>
+<text id="tC" class="hw" x="34" y="76" font-size="16" fill="#1d1d1b" transform="rotate(-.6 180 72)"></text>
+<text id="sC" class="hw" x="34" y="96" font-size="11" fill="#5a5448"></text>
+<text id="lC" class="hw" x="326" y="96" font-size="11" fill="#5a5448" text-anchor="end"></text>
+<path d="M64 226L88 188H272L296 226Z" fill="#17120f" stroke="#050404"/>
+<circle cx="112" cy="214" r="4" fill="#050404"/><circle cx="248" cy="214" r="4" fill="#050404"/>
+<rect x="70" y="112" width="220" height="68" rx="34" fill="#100d0b" stroke="#51473d" stroke-width="2"/>
+<circle id="pL" cx="120" cy="146" r="31" fill="#4a3322" stroke="#6a4a33"/>
+<circle id="pR" cx="240" cy="146" r="16" fill="#4a3322" stroke="#6a4a33"/>
+<path id="tp" d="" fill="none" stroke="#6a4a33" stroke-width="2"/>
+<g transform="translate(120 146)"><g id="rL"><use href="#hub"/></g></g>
+<g transform="translate(240 146)"><g id="rR"><use href="#hub"/></g></g>
+<rect x="168" y="186" width="24" height="10" rx="2" fill="#9a9a94"/>
+<circle cx="150" cy="196" r="4" fill="#666"/><circle cx="210" cy="196" r="4" fill="#666"/>
+<path d="M80 116H180L150 176H80z" fill="#fff" opacity=".05"/>
+<g fill="#6b6b66"><circle cx="14" cy="14" r="5"/><circle cx="346" cy="14" r="5"/><circle cx="14" cy="216" r="5"/><circle cx="346" cy="216" r="5"/></g>
+</g></svg>
+
+<svg id="sv-cd" viewBox="0 0 360 230" role="img" aria-label="CD player" style="display:none">
+<defs>
+<linearGradient id="silver" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3e6e9"/><stop offset="1" stop-color="#a9afb4"/></linearGradient>
+<linearGradient id="rb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5e8a"/><stop offset=".2" stop-color="#ffd35e" stop-opacity=".2"/><stop offset=".4" stop-color="#5effa0"/><stop offset=".6" stop-color="#5ec8ff" stop-opacity=".2"/><stop offset=".8" stop-color="#b45eff"/><stop offset="1" stop-color="#ff5e8a" stop-opacity=".2"/></linearGradient>
+<clipPath id="cpD"><circle cx="180" cy="115" r="98"/></clipPath>
+</defs>
+<rect x="4" y="4" width="352" height="222" rx="14" fill="url(#silver)" stroke="#6a7075" stroke-width="2"/>
+<g id="mD">
+<rect x="62" y="10" width="236" height="210" rx="24" fill="#222629" stroke="#454c52" stroke-width="2"/>
+<circle cx="180" cy="115" r="104" fill="#0b0c0d" stroke="#30373c"/>
+<g id="rD">
+<g clip-path="url(#cpD)"><image id="aD" x="82" y="17" width="196" height="196" preserveAspectRatio="xMidYMid slice"/></g>
+<circle cx="180" cy="115" r="98" fill="url(#rb)" opacity=".3"/>
+<circle cx="180" cy="115" r="98" fill="none" stroke="#e8ecef" stroke-opacity=".6" stroke-width="2"/>
+<circle cx="180" cy="115" r="27" fill="#d9dde2" fill-opacity=".55" stroke="#fff" stroke-opacity=".5"/>
+<circle cx="180" cy="115" r="7" fill="#0b0c0d"/>
+</g></g>
+<path d="M70 18H188L128 212H70z" fill="#fff" opacity=".06"/>
+<circle cx="330" cy="22" r="4" fill="#3fb6ff"/>
+</svg>
+
+<svg id="sv-lp" viewBox="0 0 360 230" role="img" aria-label="Vinyl turntable" style="display:none">
+<defs>
+<radialGradient id="grv" cx=".5" cy=".5" r=".012" spreadMethod="repeat"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".07"/></radialGradient>
+<linearGradient id="wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6b4630"/><stop offset="1" stop-color="#4a2f1e"/></linearGradient>
+<clipPath id="cpV"><circle cx="130" cy="115" r="40"/></clipPath>
+</defs>
+<rect x="4" y="4" width="352" height="222" rx="12" fill="url(#wood)" stroke="#1f1208" stroke-width="2"/>
+<circle cx="130" cy="115" r="106" fill="#9a9c98" stroke="#4d4f4c" stroke-width="2"/>
+<g id="mV"><g id="rV">
+<circle cx="130" cy="115" r="100" fill="#101010"/><circle cx="130" cy="115" r="100" fill="url(#grv)"/>
+<path d="M130 115L193 40A98 98 0 0 1 219 74Z" fill="#fff" opacity=".07"/>
+<path d="M130 115L193 40A98 98 0 0 1 219 74Z" fill="#fff" opacity=".07" transform="rotate(180 130 115)"/>
+<g clip-path="url(#cpV)"><image id="aV" x="90" y="75" width="80" height="80" preserveAspectRatio="xMidYMid slice"/></g>
+<circle cx="130" cy="115" r="40" fill="none" stroke="#0007" stroke-width="2"/>
+<circle cx="130" cy="115" r="3.5" fill="#d0d0c8"/>
+</g></g>
+<circle cx="318" cy="205" r="11" fill="#1a1008" stroke="#c8b78e" stroke-width="2"/><path d="M318 197v8" stroke="#c8b78e" stroke-width="2"/>
+<g id="arm"><rect x="311" y="8" width="14" height="24" rx="3" fill="#4b4b48"/><circle cx="318" cy="35" r="15" fill="#8a8a85" stroke="#3b3b38" stroke-width="2"/><rect x="315" y="35" width="6" height="156" rx="3" fill="#d4d4cc"/><rect x="310" y="188" width="16" height="24" rx="3" fill="#262626"/></g>
+</svg>
+
+</div>
+<div class="np"><b id="npT">&nbsp;</b><small id="npA"></small></div>
+<div class="meters"><div class="vu" id="vl"><i></i><b>L</b></div><div class="counter" id="ctr">00:00</div><div class="vu" id="vr"><i></i><b>R</b></div></div>
+<input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek">
+<div class="keys">
+<button id="prev" aria-label="Previous song">&#9198;&#xFE0E;</button>
+<button id="rew" aria-label="Rewind (hold)">&#9664;&#9664;</button>
+<button id="play" aria-label="Play or pause">&#9654;&#xFE0E;</button>
+<button id="ff" aria-label="Fast forward (hold)">&#9654;&#9654;&#xFE0E;</button>
+<button id="next" aria-label="Next song">&#9197;&#xFE0E;</button>
+<button id="add" aria-label="Add music from this phone">+</button>
+</div>
+<div class="chips"><button id="shuf">shuffle</button><button id="rep">repeat all</button><button id="stop">stop</button></div>
+<label class="vol">vol<input id="vol" type="range" min="0" max="1" step=".01" value=".8"></label>
+<p id="hint" class="hint">No music yet. Tap + to add songs from your phone. They stay saved on this device and play offline. These demo tapes are here until you add your own.</p>
+<ul id="list"></ul>
+<input id="file" type="file" accept="audio/*" multiple hidden>
+</main>
+<div id="toast" role="status"></div>
+<script>
+const $=i=>document.getElementById(i),A=new Audio();
+A.preservesPitch=A.mozPreservesPitch=A.webkitPreservesPitch=false;
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const pad=n=>String(n).padStart(2,'0'),fmt=s=>isFinite(s)?pad(Math.floor(s/60))+':'+pad(Math.floor(s%60)):'--:--';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';'),trunc=(s,n=26)=>s.length>n?s.slice(0,n-1)+'…':s;
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+let tt;function toast(m,ms=2200){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),ms)}
+
+/* ---------- state ---------- */
+const TH={cas:{lp:7000,hp:3500,hiss:.014,wow:.004},cd:{lp:22000,hp:3500,hiss:0,wow:0},lp:{lp:9500,hp:900,hiss:.012,wow:.0012}};
+let th='cas',cur=-1,mode='stop',vol=+(ls.get('vol')||.8),shuf=ls.get('shuf')==='1',rep=+(ls.get('rep')||1),busy=0,user=[],db,curUrl;
+let ctx,an,vg,hiss,lpf,hpf,nbuf;
+const demos=[
+{name:'Night Drive',artist:'Demo tape',demo:1,spec:{bpm:108,root:57,sc:[0,3,5,7,10],prog:[0,-4,-2,-5],arp:[0,2,4,2,3,2,1,2],wave:'triangle',bass:'sawtooth',v:.26,b:.28,k:1}},
+{name:'Corner Store',artist:'Demo tape',demo:1,spec:{bpm:92,root:60,sc:[0,2,4,7,9],prog:[0,-3,-5,-7],arp:[0,-1,2,-1,4,-1,2,-1],wave:'square',bass:'triangle',v:.1,b:.45,k:1}},
+{name:'Rain on Tin',artist:'Demo tape',demo:1,spec:{bpm:68,root:52,sc:[0,3,5,7,10],prog:[0,3,5,2],arp:[2,-1,-1,4,-1,-1,3,-1,-1,5,-1,-1],wave:'sine',bass:'sine',v:.3,b:.5,k:0}}];
+const Q=()=>user.length?user:demos;
+
+/* ---------- album art ---------- */
+function genArt(seed){let h=0;for(const ch of seed)h=(h*31+ch.charCodeAt(0))>>>0;const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),a=h%360,g=x.createLinearGradient(0,0,256,256);
+g.addColorStop(0,`hsl(${a} 55% 38%)`);g.addColorStop(1,`hsl(${(a+50)%360} 60% 20%)`);x.fillStyle=g;x.fillRect(0,0,256,256);
+for(let i=0;i<5;i++){h=(Math.imul(h,1103515245)+12345)>>>0;x.beginPath();x.arc(h%256,(h>>>8)%256,30+(h>>>16)%70,0,7);x.fillStyle=`hsla(${(a+(h>>>4)%90)%360} 70% 60% / .22)`;x.fill()}
+return c.toDataURL('image/jpeg',.8)}
+async function squareArt(blob){const bm=await createImageBitmap(blob),s=Math.min(bm.width,bm.height),c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').drawImage(bm,(bm.width-s)/2,(bm.height-s)/2,s,s,0,0,256,256);return c.toDataURL('image/jpeg',.82)}
+demos.forEach(d=>d.art=genArt(d.name));
+
+/* ---------- tag reading: ID3 (mp3), FLAC, MP4/M4A ---------- */
+function txt(b){const e=b[0];let l=['iso-8859-1','utf-16le','utf-16be','utf-8'][e]||'utf-8';if(e===1&&b[1]===0xFE&&b[2]===0xFF)l='utf-16be';return new TextDecoder(l).decode(b.subarray(1)).replace(/\0+$/,'').split('\0')[0]}
+function id3(u,o){const ver=u[3],end=Math.min(u.length,10+((u[6]&127)<<21|(u[7]&127)<<14|(u[8]&127)<<7|(u[9]&127)));let p=10;
+if(u[5]&64){p+=ver==4?((u[10]&127)<<21|(u[11]&127)<<14|(u[12]&127)<<7|(u[13]&127)):4+(u[10]<<24|u[11]<<16|u[12]<<8|u[13])}
+while(p+10<end){const id=String.fromCharCode(u[p],u[p+1],u[p+2],u[p+3]);if(!/^[A-Z0-9]{4}$/.test(id))break;
+const sz=ver==4?((u[p+4]&127)<<21|(u[p+5]&127)<<14|(u[p+6]&127)<<7|(u[p+7]&127)):((u[p+4]<<24|u[p+5]<<16|u[p+6]<<8|u[p+7])>>>0);
+const b=u.subarray(p+10,p+10+sz);p+=10+sz;
+if(id==='TIT2')o.title=txt(b)||o.title;else if(id==='TPE1')o.artist=txt(b);else if(id==='TALB')o.album=txt(b);
+else if(id==='APIC'&&!o.pic){let i=1;while(b[i])i++;const mime=String.fromCharCode(...b.subarray(1,i));i+=2;
+if(b[0]===1||b[0]===2){while(!(b[i]===0&&b[i+1]===0)&&i<b.length)i+=2;i+=2}else{while(b[i])i++;i++}
+o.pic=new Blob([b.subarray(i)],{type:mime.includes('/')?mime:'image/jpeg'})}}}
+function flac(u,o){let p=4;for(;;){const last=u[p]>>7,t=u[p]&127,len=u[p+1]<<16|u[p+2]<<8|u[p+3],b=u.subarray(p+4,p+4+len),dv=new DataView(b.buffer,b.byteOffset,b.byteLength);p+=4+len;
+if(t===4){let q=4+dv.getUint32(0,true);const n=dv.getUint32(q,true);q+=4;for(let k=0;k<n;k++){const l=dv.getUint32(q,true);q+=4;const s=new TextDecoder().decode(b.subarray(q,q+l));q+=l;const i=s.indexOf('='),K=s.slice(0,i).toUpperCase(),V=s.slice(i+1);if(K==='TITLE')o.title=V;if(K==='ARTIST')o.artist=V;if(K==='ALBUM')o.album=V}}
+if(t===6&&!o.pic){let q=4;const ml=dv.getUint32(q);q+=4;const mime=new TextDecoder().decode(b.subarray(q,q+ml));q+=ml;const dl=dv.getUint32(q);q+=4+dl+16;const il=dv.getUint32(q);q+=4;o.pic=new Blob([b.subarray(q,q+il)],{type:mime||'image/jpeg'})}
+if(last||p>=u.length)break}}
+function mp4(u,o){const f=(s,from=0)=>{const a=[...s].map(c=>c.charCodeAt(0));outer:for(let i=from;i<u.length-a.length;i++){for(let k=0;k<a.length;k++)if(u[i+k]!==a[k])continue outer;return i}return -1};
+const rd=n=>{const i=f(n);if(i<0)return null;const j=f('data',i);if(j<0)return null;const sz=new DataView(u.buffer,u.byteOffset+j-4,4).getUint32(0);return u.subarray(j+12,j-4+sz)};
+const s=n=>{const b=rd(n);return b?new TextDecoder().decode(b):''};
+o.title=s('\xA9nam')||o.title;o.artist=o.artist||s('\xA9ART');o.album=o.album||s('\xA9alb');
+if(!o.pic){const c=rd('covr');if(c&&c.length>100)o.pic=new Blob([c],{type:c[0]===0x89?'image/png':'image/jpeg'})}}
+async function meta(file){const o={title:file.name.replace(/\.[^.]+$/,''),artist:'',album:'',pic:null};
+try{const u=new Uint8Array(await file.slice(0,Math.min(file.size,3e6)).arrayBuffer());
+if(u[0]===73&&u[1]===68&&u[2]===51)id3(u,o);
+else if(u[0]===102&&u[1]===76&&u[2]===97&&u[3]===67)flac(u,o);
+else if(u[4]===102&&u[5]===116&&u[6]===121&&u[7]===112){mp4(u,o);if(!o.pic&&file.size>3e6)mp4(new Uint8Array(await file.slice(file.size-3e6).arrayBuffer()),o)}}catch(e){}
+return o}
+
+/* ---------- storage (IndexedDB, works offline) ---------- */
+const openDB=()=>new Promise((res,rej)=>{const r=indexedDB.open('tapedeck',1);r.onupgradeneeded=()=>r.result.createObjectStore('t',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const tx=(m,fn)=>new Promise((res,rej)=>{const t=db.transaction('t',m),r=fn(t.objectStore('t'));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)});
+async function addFiles(files){files=[...files].filter(f=>f.type.startsWith('audio')||/\.(mp3|m4a|aac|flac|ogg|opus|wav)$/i.test(f.name));if(!files.length){toast('No audio files found');return}
+const wasEmpty=!user.length;let n=0;
+for(const f of files){toast(`Adding ${++n} of ${files.length}…`,6000);const m=await meta(f);let art;try{art=m.pic?await squareArt(m.pic):genArt(m.title+m.artist)}catch(e){art=genArt(m.title)}
+const rec={name:m.title,artist:m.artist,album:m.album,art,blob:f};
+try{rec.id=await tx('readwrite',s=>s.add(rec))}catch(e){rec.id=Date.now()+Math.random()}
+user.push(rec)}
+toast(`Added ${files.length} song${files.length>1?'s':''}`);
+if(wasEmpty){A.pause();setMode('stop');cur=-1;go(0,true)}else renderList()}
+async function del(id){const i=user.findIndex(t=>t.id===id);if(i<0)return;try{await tx('readwrite',s=>s.delete(id))}catch(e){}
+user.splice(i,1);if(i===cur){A.pause();setMode('stop');go(Math.min(i,Q().length-1),false)}else{if(i<cur)cur--;renderList()}}
+
+/* ---------- demo tape synth ---------- */
+const N=n=>440*Math.pow(2,(n-69)/12);
+function toWav(b){const n=b.length,c=b.numberOfChannels,v=new DataView(new ArrayBuffer(44+n*c*2)),s=(o,t)=>[...t].forEach((x,i)=>v.setUint8(o+i,x.charCodeAt(0)));
+s(0,'RIFF');v.setUint32(4,36+n*c*2,true);s(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,c,true);v.setUint32(24,b.sampleRate,true);v.setUint32(28,b.sampleRate*c*2,true);v.setUint16(32,c*2,true);v.setUint16(34,16,true);s(36,'data');v.setUint32(40,n*c*2,true);
+const ch=[...Array(c).keys()].map(i=>b.getChannelData(i));let o=44;
+for(let i=0;i<n;i++)for(let k=0;k<c;k++){v.setInt16(o,Math.max(-1,Math.min(1,ch[k][i]))*32767,true);o+=2}
+return URL.createObjectURL(new Blob([v],{type:'audio/wav'}))}
+async function synth(t,len=48){const sr=22050,o=new OfflineAudioContext(2,sr*len,sr),m=o.createGain();m.gain.value=.5;m.connect(o.destination);const st=60/t.bpm/2;
+const tone=(w,f,d,type,v,pan)=>{const os=o.createOscillator(),g=o.createGain(),p=o.createStereoPanner();os.type=type;os.frequency.value=f;g.gain.setValueAtTime(0,w);g.gain.linearRampToValueAtTime(v,w+.01);g.gain.exponentialRampToValueAtTime(.0001,w+d);p.pan.value=pan;os.connect(g);g.connect(p);p.connect(m);os.start(w);os.stop(w+d+.05)};
+for(let i=0;i*st<len;i++){const w=i*st,r=t.root+t.prog[Math.floor(i/8)%t.prog.length],k=t.arp[i%t.arp.length];
+if(k>=0)tone(w,N(r+12+t.sc[k%t.sc.length]+12*Math.floor(k/t.sc.length)),st*1.8,t.wave,t.v,i%2?.3:-.3);
+if(i%8==0)tone(w,N(r-12),st*6,t.bass,t.b,0);
+if(t.k&&i%4==0){const os=o.createOscillator(),g=o.createGain();os.frequency.setValueAtTime(130,w);os.frequency.exponentialRampToValueAtTime(40,w+.12);g.gain.setValueAtTime(.7,w);g.gain.exponentialRampToValueAtTime(.001,w+.16);os.connect(g);g.connect(m);os.start(w);os.stop(w+.2)}}
+return toWav(await o.startRendering())}
+async function srcOf(t){if(t.blob){if(curUrl)URL.revokeObjectURL(curUrl);return curUrl=URL.createObjectURL(t.blob)}if(!t.url){$('sC').textContent='winding tape…';t.url=await synth(t.spec)}return t.url}
+
+/* ---------- audio graph + tape / vinyl character ---------- */
+function ensure(){if(ctx)return;ctx=new(window.AudioContext||window.webkitAudioContext)();
+const src=ctx.createMediaElementSource(A);lpf=ctx.createBiquadFilter();lpf.type='lowpass';an=ctx.createAnalyser();an.fftSize=512;vg=ctx.createGain();vg.gain.value=vol;
+src.connect(lpf);lpf.connect(an);an.connect(vg);vg.connect(ctx.destination);
+nbuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+const ns=ctx.createBufferSource();ns.buffer=nbuf;ns.loop=true;hpf=ctx.createBiquadFilter();hpf.type='highpass';hiss=ctx.createGain();hiss.gain.value=0;ns.connect(hpf);hpf.connect(hiss);hiss.connect(ctx.destination);ns.start();applyFx()}
+function applyFx(){if(!ctx)return;lpf.frequency.value=TH[th].lp;hpf.frequency.value=TH[th].hp;setMode(mode)}
+function click(){ensure();ctx.resume();const o=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime;o.type='square';o.frequency.value=th==='cd'?900:70;g.gain.setValueAtTime(.1*vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.04);o.connect(g);g.connect(ctx.destination);o.start();o.stop(t+.05)}
+function pop(){const s=ctx.createBufferSource(),g=ctx.createGain(),t=ctx.currentTime;s.buffer=nbuf;g.gain.setValueAtTime(.22*vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.012);s.connect(g);g.connect(ctx.destination);s.start(t,Math.random()*1.9,.02)}
+function setMode(m){mode=m;$('play').classList.toggle('on',m==='play');$('rew').classList.toggle('on',m==='rew');$('ff').classList.toggle('on',m==='ff');
+$('play').innerHTML=m==='play'?'&#10074;&#10074;':'&#9654;&#xFE0E;';if(hiss)hiss.gain.value=({play:1,ff:2,rew:2}[m]||0)*TH[th].hiss*vol}
+
+/* ---------- player ---------- */
+function renderList(){const q=Q();$('hint').hidden=!!user.length;
+$('list').innerHTML=q.map((t,i)=>`<li><button class="row${i===cur?' cur':''}" data-i="${i}"><img src="${t.art}" alt=""><span><b>${esc(t.name)}</b><small>${esc(t.artist||t.album||'')}</small></span></button>${t.demo?'':`<button class="x" data-d="${t.id}" aria-label="Remove ${esc(t.name)}">&#10005;</button>`}</li>`).join('')}
+function show(t){for(const i of['aC','aD','aV'])$(i).setAttribute('href',t.art);
+$('tC').textContent=trunc(t.name,24);$('sC').textContent=trunc(t.artist||t.album||'Side A',34);$('lC').textContent='';
+$('npT').textContent=t.name;$('npA').textContent=[t.artist,t.album].filter(Boolean).join(' / ');
+if('mediaSession'in navigator&&window.MediaMetadata)navigator.mediaSession.metadata=new MediaMetadata({title:t.name,artist:t.artist||'',album:t.album||'',artwork:[{src:t.art,sizes:'256x256',type:'image/jpeg'}]})}
+const med={cas:$('mC'),cd:$('mD'),lp:$('mV')},svs={cas:$('sv-cas'),cd:$('sv-cd'),lp:$('sv-lp')};
+async function anim(c){const e=med[th];e.classList.remove('in','out');void e.getBoundingClientRect();e.classList.add(c);if(c==='in'){await wait(540);e.classList.remove('in')}else await wait(450)}
+async function go(i,auto=true,first=false){if(busy)return;busy=1;
+try{A.pause();setMode('stop');if(!first)await anim('out');cur=i;const t=Q()[i];show(t);renderList();
+try{A.src=await srcOf(t);show(t)}catch(e){toast("Can't open this file")}
+await anim('in')}finally{busy=0}
+if(auto)play()}
+async function play(){if(busy)return;ensure();await ctx.resume();if(cur<0)return go(0,true);A.playbackRate=1;try{await A.play();setMode('play')}catch(e){setMode('pause')}}
+function pause(){A.pause();setMode('pause')}
+function step(d){const n=Q().length;if(!n||busy)return;if(d<0&&A.currentTime>3){A.currentTime=0;return}
+let i=(cur+d+n)%n;if(shuf&&n>1)do i=Math.floor(Math.random()*n);while(i===cur);go(i,true)}
+A.onended=()=>{if(mode!=='play')return;if(rep===2){A.currentTime=0;A.play();return}if(!shuf&&cur===Q().length-1&&rep===0){setMode('stop');A.currentTime=0;return}step(1)};
+A.onloadedmetadata=()=>$('lC').textContent=fmt(A.duration);
+A.onerror=()=>{if(A.src)toast("Can't play this file")};
+function setTheme(t,a){th=t;ls.set('th',t);document.querySelector('.deck').dataset.th=t;for(const k in svs)svs[k].style.display=k===t?'block':'none';
+document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));applyFx();if(a)anim('in')}
+
+/* ---------- controls ---------- */
+document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(b&&b.dataset.t!==th){setTheme(b.dataset.t,true);try{click()}catch(x){}}};
+$('play').onclick=()=>{click();mode==='play'?pause():play()};
+$('stop').onclick=()=>{click();A.pause();if(A.src)A.currentTime=0;setMode('stop')};
+$('prev').onclick=()=>{click();step(-1)};$('next').onclick=()=>{click();step(1)};
+$('add').onclick=()=>{click();$('file').click()};
+$('file').onchange=e=>{const f=e.target.files;if(f&&f.length)addFiles(f);e.target.value=''};
+$('shuf').onclick=()=>{click();shuf=!shuf;ls.set('shuf',shuf?1:0);$('shuf').classList.toggle('on',shuf)};
+$('rep').onclick=()=>{click();rep=(rep+1)%3;ls.set('rep',rep);$('rep').textContent=['repeat off','repeat all','repeat one'][rep];$('rep').classList.toggle('on',rep>0)};
+$('vol').oninput=e=>{vol=+e.target.value;ls.set('vol',vol);if(vg)vg.gain.value=vol;setMode(mode)};
+function scan(btn,m){let on=0,was;
+btn.onpointerdown=e=>{e.preventDefault();if(cur<0||busy)return;click();on=1;was=mode;A.pause();setMode(m);try{btn.setPointerCapture(e.pointerId)}catch(x){}};
+const end=()=>{if(!on)return;on=0;if(was==='play')play();else setMode(was==='rew'||was==='ff'?'pause':was)};
+btn.onpointerup=btn.onpointercancel=end;btn.oncontextmenu=e=>e.preventDefault()}
+scan($('rew'),'rew');scan($('ff'),'ff');
+let sk=0;const seek=$('seek');seek.onpointerdown=()=>sk=1;seek.onpointerup=seek.onpointercancel=()=>sk=0;
+seek.oninput=()=>{if(isFinite(A.duration))A.currentTime=seek.value/1000*A.duration};
+$('list').onclick=e=>{const x=e.target.closest('[data-d]');if(x){click();del(+x.dataset.d);return}
+const r=e.target.closest('[data-i]');if(r){click();const i=+r.dataset.i;i===cur?(mode==='play'?pause():play()):go(i,true)}};
+if('mediaSession'in navigator){const h=(a,f)=>{try{navigator.mediaSession.setActionHandler(a,f)}catch(e){}};h('play',play);h('pause',pause);h('previoustrack',()=>step(-1));h('nexttrack',()=>step(1))}
+
+/* ---------- animation loop ---------- */
+const rL=$('rL'),rR=$('rR'),pL=$('pL'),pR=$('pR'),tp=$('tp'),rD=$('rD'),rV=$('rV'),arm=$('arm'),ctr=$('ctr'),nl=$('vl').firstElementChild,nr=$('vr').firstElementChild;
+let la=0,ra=0,da=0,va=0,armA=0,sp=0,vu=0,last=performance.now();const buf=new Uint8Array(512);
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;let d=A.duration;
+if((mode==='ff'||mode==='rew')&&cur>=0&&isFinite(d)){A.currentTime=Math.max(0,A.currentTime+(mode==='ff'?7:-9)*dt);
+if(mode==='rew'&&A.currentTime<=0)setMode('pause');else if(mode==='ff'&&A.currentTime>=d-.3){setMode('stop');step(1)}}
+const p=isFinite(d)&&d?A.currentTime/d:0;
+sp+=((({play:1,ff:5,rew:-5})[mode]||0)-sp)*Math.min(1,dt*6);
+if(th==='cas'){const r1=31-15*p,r2=16+15*p;la+=sp*dt*4000/r1;ra+=sp*dt*4000/r2;
+rL.setAttribute('transform',`rotate(${la%360})`);rR.setAttribute('transform',`rotate(${ra%360})`);pL.setAttribute('r',r1);pR.setAttribute('r',r2);tp.setAttribute('d',`M120 ${146+r1}L150 194H210L240 ${146+r2}`)}
+else if(th==='cd'){da+=sp*dt*(520-260*p);rD.setAttribute('transform',`rotate(${da%360} 180 115)`)}
+else{va+=sp*dt*200;rV.setAttribute('transform',`rotate(${va%360} 130 115)`);armA+=((mode==='stop'?0:40+16*p)-armA)*Math.min(1,dt*3);arm.setAttribute('transform',`rotate(${armA.toFixed(2)} 318 35)`);
+if(ctx&&mode==='play'&&Math.random()<dt*2.2)pop()}
+const t=fmt(A.currentTime);if(ctr.textContent!==t)ctr.textContent=t;
+if(!sk)seek.value=p*1000;
+let lv=0;if(an&&mode==='play'){an.getByteTimeDomainData(buf);let s=0;for(const v of buf){const x=(v-128)/128;s+=x*x}lv=Math.min(1,Math.sqrt(s/buf.length)*3.5)}
+vu+=(lv-vu)*(lv>vu?.4:.12);
+nl.style.transform=`rotate(${-50+100*vu}deg)`;nr.style.transform=`rotate(${-50+100*Math.min(1,vu*(.9+.1*Math.sin(now/530)))}deg)`;
+if(mode==='play')A.playbackRate=1+TH[th].wow*(Math.sin(now/310)+.5*Math.sin(now/97));
+requestAnimationFrame(frame)}
+
+/* ---------- start ---------- */
+(async()=>{$('vol').value=vol;$('shuf').classList.toggle('on',shuf);$('rep').textContent=['repeat off','repeat all','repeat one'][rep];$('rep').classList.toggle('on',rep>0);
+try{db=await Promise.race([openDB(),wait(2500).then(()=>{throw 0})]);user=await tx('readonly',s=>s.getAll())||[]}catch(e){db=null;user=[]}
+setTheme(ls.get('th')||'cas');requestAnimationFrame(frame);await go(0,false,true)})();
+</script></body></html>
