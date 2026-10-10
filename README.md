@@ -19,7 +19,7 @@ MP3, FLAC, WAV, AAC/M4A, OGG and Opus play directly. ALAC and AIFF are converted
 
 ## Install
 
-1. Open the **Releases** page and download `app-debug.apk` from the latest release.
+1. Open the **Releases** page and download `Tape-Deck.apk` from the latest release.
 2. Tap the file. If Android asks, allow installs from this source.
 3. If Play Protect shows a warning, tap **More details**, then **Install anyway**.
 4. On first launch, allow access to music and audio so your songs can be found.
