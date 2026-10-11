@@ -8,9 +8,9 @@
 :root{--desk:#c2c6c2;--ink:#1d1f1f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--desk:#131514;--ink:#e6e6e0}}
 :root[data-theme="dark"]{--desk:#131514;--ink:#e6e6e0}
-html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-tap-highlight-color:transparent}
+html{overflow-x:hidden;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-tap-highlight-color:transparent}
 *{box-sizing:border-box}
-body{margin:0;background:var(--desk);color:var(--ink);font-family:"Share Tech Mono","Courier New",monospace;display:flex;justify-content:center;padding:8px;min-height:100vh}
+body{overflow-x:clip;margin:0;background:var(--desk);color:var(--ink);font-family:"Share Tech Mono","Courier New",monospace;display:flex;justify-content:center;padding:8px;min-height:100vh}
 .app{--ar:.72;--frame:#5b3d28;--p1:#585d5f;--p2:#383c3d;--k1:#d6d9d7;--k2:#9a9e9d;--ks:#44484a;--kc:#222;--ac:#d9822b;--fg:#e8e4d6;--lcd:#f0ecdc;--lcdbg:#0d0e0e;
 width:100%;max-width:560px;display:grid;gap:14px;align-content:start;color:var(--fg)}
 .app[data-th=cd]{--ar:1;--frame:#8f969c;--p1:#30353a;--p2:#16191c;--k1:#e6e9ec;--k2:#a9b0b6;--ks:#555b61;--kc:#1b1d1f;--ac:#3fb6ff;--fg:#dfe6ec;--lcd:#7fd3ff;--lcdbg:#051017}
@@ -412,7 +412,10 @@ return x.canvas.toDataURL('image/jpeg',.8)}
 async function squareArt(blob){const bm=await createImageBitmap(blob),s=Math.min(bm.width,bm.height),c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').drawImage(bm,(bm.width-s)/2,(bm.height-s)/2,s,s,0,0,256,256);return c.toDataURL('image/jpeg',.82)}
 let artQ=Promise.resolve();
 function artFor(t){if(t.art)return Promise.resolve(t.art);const N=NAT();if(!N||!t.uri||t.art0)return Promise.resolve(null);if(t._ap)return t._ap;
-return t._ap=new Promise(res=>{artQ=artQ.then(async()=>{try{const r=await N.art({uri:t.uri});if(r&&r.data){t.art='data:image/jpeg;base64,'+r.data;res(t.art);return}}catch(e){}t.art0=1;res(null)})})}
+return t._ap=new Promise(res=>{artQ=artQ.then(async()=>{
+try{const r=await N.art({uri:t.uri});if(r&&r.data){t.art='data:image/jpeg;base64,'+r.data;res(t.art);return}}catch(e){}
+try{const r=await N.read({uri:t.uri,offset:0,length:1572864}),raw=await(await fetch('data:application/octet-stream;base64,'+r.data)).blob(),m=await meta(raw,t.file||t.name);if(m.pic){t.art=await squareArt(m.pic);res(t.art);return}}catch(e){}
+t.art0=1;res(null)})})}
 demos.forEach(d=>d.art=genArt(d.name));
 
 /* ---------- tag reading: ID3 (mp3), FLAC, MP4/M4A ---------- */
@@ -489,7 +492,7 @@ function addMore(){const q=Q(),ul=$('list'),grid=viewM==='grid',old=ul.querySele
 const end=Math.min(filt.length,shown+120);let h='';for(let k=shown;k<end;k++){const i=filt[k];h+=grid?tile(q[i],i):rowH(q[i],i)}
 shown=end;if(shown<filt.length)h+='<li class="more" aria-hidden="true"></li>';
 ul.insertAdjacentHTML('beforeend',h);
-if(io)ul.querySelectorAll('img:not([src])').forEach(im=>io.observe(im));
+if(io)ul.querySelectorAll('.case,.row').forEach(el=>{if(!Q()[+el.dataset.i].art)io.observe(el)});
 const m=ul.querySelector('.more');if(m&&mo)mo.observe(m)}
 function ensureShown(i){const k=filt.indexOf(i);if(k<0)return;let g=0;while(shown<=k&&shown<filt.length&&g++<80)addMore()}
 function renderList(){const q=Q(),f=$('q').value.toLowerCase().trim(),grid=viewM==='grid';
@@ -498,7 +501,7 @@ const ul=$('list');ul.className=grid?'grid':'list';ul.innerHTML='';shown=0;$('vm
 $('libN').textContent=view.length?(f?`${filt.length} of ${view.length}`:`${view.length} song${view.length>1?'s':''}`):'';
 if(io)io.disconnect();if(mo)mo.disconnect();
 mo=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){mo.disconnect();addMore()}},{rootMargin:'900px'});
-io=NAT()?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);const t=Q()[+e.target.dataset.i];if(t)artFor(t).then(u=>{if(u)e.target.src=u})}}),{rootMargin:'300px'}):null;
+io=NAT()?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);const t=Q()[+e.target.dataset.i];if(t)artFor(t).then(u=>{const im=e.target.querySelector('img');if(u&&im)im.src=u})}}),{rootMargin:'300px'}):null;
 addMore();markCur(false);updHint()}
 function markCur(scroll){if(scroll&&cur>=0)ensureShown(cur);document.querySelectorAll('.row.cur,.case.cur').forEach(r=>{r.classList.remove('cur');const b=r.querySelector('b');if(b)b.classList.remove('mq','run')});
 const r=cur>=0&&document.querySelector(`.row[data-i="${cur}"],.case[data-i="${cur}"]`);
